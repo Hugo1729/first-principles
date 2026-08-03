@@ -1,6 +1,6 @@
 import numpy as np
 
-class MLP:
+class VNMLP:
     def __init__(self, layer_sizes):
         self.weight_shapes = [(layer_sizes[i+1],layer_sizes[i]) for i in range(len(layer_sizes)-1)]
 
@@ -17,12 +17,32 @@ class MLP:
     def activation(x):
         return 1/(1+np.exp(-x))
 
+    @staticmethod
+    def cost(c, y):
+        return np.sum((c - y) ** 2)
+
+    def loss(self, X, Y):
+        J = 0
+
+        for x, y in zip(X, Y):
+            J += self.cost(self.predict(x), y)
+
+        return J
+
+    # def fit(self, X, y):
+        
 
 
-layer_sizes = (10,1000,1000,10)
 
-mlp = MLP(layer_sizes)
+layer_sizes = (2,3,2)
+
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]]).reshape(4,2,1)
+Y = np.array([[1, 0], [0, 1], [0, 1], [1, 0]]).reshape(4,2,1)
+
+mlp = VNMLP(layer_sizes)
 print(mlp.predict(np.ones((layer_sizes[0],1))))
+print()
+print("Loss:", mlp.loss(X,Y))
 
 
 #notice variance drift in this sigmoid neural net, interesting discovery
