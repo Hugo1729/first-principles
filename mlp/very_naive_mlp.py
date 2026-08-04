@@ -17,6 +17,7 @@ class VNMLP:
 
     @staticmethod
     def activation(x):
+        # return (np.exp(x)-np.exp(-x)) / (np.exp(x)+np.exp(-x))
         return 1/(1+np.exp(-x))
 
     @staticmethod
@@ -32,11 +33,11 @@ class VNMLP:
         return J
 
     def fit(self, X, Y, alpha, h, epocs):
+        self.training_loss = []
+
         for iter in range(epocs):
             w_grad = [np.zeros(s) for s in self.weight_shapes]
             b_grad = [np.zeros((self.layer_sizes[i],1)) for i in range(1,len(self.layer_sizes))]
-
-            loss1 = self.loss(X, Y)    #f(x)
 
             for l in range(len(w_grad)):
                 for b in range(len(b_grad[l])):
@@ -65,7 +66,8 @@ class VNMLP:
                 self.biases[l] -= alpha * (1/X.shape[0]) * b_grad[l]  # mult with alpha and 1/4
                 self.weights[l] -= alpha * (1/X.shape[0]) * w_grad[l]
 
-            print("#After iteration", iter, "loss is:", self.loss(X, Y))
+            self.training_loss.append(self.loss(X, Y))
+            print("#After iteration", iter, "loss is:", self.training_loss[-1])
 
         return self
 
@@ -79,12 +81,17 @@ print(mlp.predict(np.ones((layer_sizes[0],1))))
 print()
 print("Loss:", mlp.loss(X,Y))
 
-mlp.fit(X, Y, 1, 1e-7, 5000)
+mlp.fit(X, Y, 1, 1e-8, 3000)
 
 
 for x in X:
     print("input", x)
     print("output", mlp.predict(x))
+
+import matplotlib.pyplot as plt
+
+plt.plot(mlp.training_loss)
+plt.show()
 
 
 #notice variance drift in this sigmoid neural net, interesting discovery
