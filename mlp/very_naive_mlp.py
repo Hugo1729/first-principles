@@ -4,6 +4,8 @@ class VNMLP:
     def __init__(self, layer_sizes):
         self.weight_shapes = [(layer_sizes[i+1],layer_sizes[i]) for i in range(len(layer_sizes)-1)]
 
+        self.layer_sizes = layer_sizes
+
         self.weights = [np.random.standard_normal(s)/np.sqrt(s[1]) for s in self.weight_shapes]
         self.biases = [np.zeros((layer_sizes[i],1)) for i in range(1,len(layer_sizes))]
 
@@ -32,7 +34,7 @@ class VNMLP:
     def fit(self, X, Y, alpha, h, epocs):
         for iter in range(epocs):
             w_grad = [np.zeros(s) for s in self.weight_shapes]
-            b_grad = [np.zeros((layer_sizes[i],1)) for i in range(1,len(layer_sizes))]
+            b_grad = [np.zeros((self.layer_sizes[i],1)) for i in range(1,len(self.layer_sizes))]
 
             loss1 = self.loss(X, Y)    #f(x)
 
@@ -41,16 +43,23 @@ class VNMLP:
                     self.biases[l][b] += h
                     loss2 = self.loss(X, Y)   #f(x+h)
                     self.biases[l][b] -= h
+                    self.biases[l][b] -= h
+                    loss3 = self.loss(X, Y)   #f(x-h)
+                    self.biases[l][b] += h
 
-                    b_grad[l][b] += (loss2 - loss1) / h
+                    b_grad[l][b] += (loss2 - loss3) / (2*h)
 
                 for i in range(w_grad[l].shape[0]):
                     for j in range(w_grad[l].shape[1]):
                         self.weights[l][i][j] += h
                         loss2 = self.loss(X, Y)     #f(x+h)
                         self.weights[l][i][j] -= h
+                        self.weights[l][i][j] -= h
+                        loss3 = self.loss(X, Y)   #f(x-h)
+                        self.weights[l][i][j] += h
+
     
-                        w_grad[l][i][j] += (loss2 - loss1) / h
+                        w_grad[l][i][j] += (loss2 - loss3) / (2*h)
 
             for l in range(len(w_grad)):
                 self.biases[l] -= alpha * (1/X.shape[0]) * b_grad[l]  # mult with alpha and 1/4
@@ -60,7 +69,7 @@ class VNMLP:
 
         return self
 
-layer_sizes = (2,3,2)
+layer_sizes = (2,5,5,2)
 
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]]).reshape(4,2,1)
 Y = np.array([[1, 0], [0, 1], [0, 1], [1, 0]]).reshape(4,2,1)
@@ -70,8 +79,12 @@ print(mlp.predict(np.ones((layer_sizes[0],1))))
 print()
 print("Loss:", mlp.loss(X,Y))
 
-mlp.fit(X, Y, 1, 1e-7, 100)
-print(mlp.predict(np.array([1,0]).reshape(2,1)))
+mlp.fit(X, Y, 1, 1e-7, 5000)
+
+
+for x in X:
+    print("input", x)
+    print("output", mlp.predict(x))
 
 
 #notice variance drift in this sigmoid neural net, interesting discovery
