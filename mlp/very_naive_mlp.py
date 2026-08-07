@@ -35,43 +35,50 @@ class VNMLP:
     def fit(self, X, Y, alpha, h, epocs):
         self.training_loss = []
 
+        n = X.shape[1]
+        m = Y.shape[1]
+
         for iter in range(epocs):
-            w_grad = [np.zeros(s) for s in self.weight_shapes]
-            b_grad = [np.zeros((self.layer_sizes[i],1)) for i in range(1,len(self.layer_sizes))]
+            for x, y in zip(X, Y):
+                x = x.reshape(1,n,1)
+                y = y.reshape(1,m,1)
 
-            for l in range(len(w_grad)):
-                for b in range(len(b_grad[l])):
-                    self.biases[l][b] += h
-                    loss2 = self.loss(X, Y)   #f(x+h)
-                    self.biases[l][b] -= h
-                    self.biases[l][b] -= h
-                    loss3 = self.loss(X, Y)   #f(x-h)
-                    self.biases[l][b] += h
+                w_grad = [np.zeros(s) for s in self.weight_shapes]
+                b_grad = [np.zeros((self.layer_sizes[i],1)) for i in range(1,len(self.layer_sizes))]
 
-                    b_grad[l][b] += (loss2 - loss3) / (2*h)
+                for l in range(len(w_grad)):
+                    for b in range(len(b_grad[l])):
+                        self.biases[l][b] += h
+                        loss2 = self.loss(x, y)   #f(x+h)
+                        self.biases[l][b] -= h
+                        self.biases[l][b] -= h
+                        loss3 = self.loss(x, y)   #f(x-h)
+                        self.biases[l][b] += h
 
-                for i in range(w_grad[l].shape[0]):
-                    for j in range(w_grad[l].shape[1]):
-                        self.weights[l][i][j] += h
-                        loss2 = self.loss(X, Y)     #f(x+h)
-                        self.weights[l][i][j] -= h
-                        self.weights[l][i][j] -= h
-                        loss3 = self.loss(X, Y)   #f(x-h)
-                        self.weights[l][i][j] += h
+                        b_grad[l][b] += (loss2 - loss3) / (2*h)
 
-    
-                        w_grad[l][i][j] += (loss2 - loss3) / (2*h)
+                    for i in range(w_grad[l].shape[0]):
+                        for j in range(w_grad[l].shape[1]):
+                            self.weights[l][i][j] += h
+                            loss2 = self.loss(x, y)     #f(x+h)
+                            self.weights[l][i][j] -= h
+                            self.weights[l][i][j] -= h
+                            loss3 = self.loss(x, y)   #f(x-h)
+                            self.weights[l][i][j] += h
 
-            for l in range(len(w_grad)):
-                self.biases[l] -= alpha * (1/X.shape[0]) * b_grad[l]  # mult with alpha and 1/4
-                self.weights[l] -= alpha * (1/X.shape[0]) * w_grad[l]
+        
+                            w_grad[l][i][j] += (loss2 - loss3) / (2*h)
 
-            self.training_loss.append(self.loss(X, Y))
-            print("#After iteration", iter, "loss is:", self.training_loss[-1])
+                for l in range(len(w_grad)):
+                    self.biases[l] -= alpha * (1/X.shape[0]) * b_grad[l]  # mult with alpha and 1/4
+                    self.weights[l] -= alpha * (1/X.shape[0]) * w_grad[l]
+
+                self.training_loss.append(self.loss(X, Y))
+                print("#After iteration", iter, "loss is:", self.training_loss[-1])
 
         return self
 
-layer_sizes = (2,5,5,2)
+layer_sizes = (2,10,10,2)
 
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]]).reshape(4,2,1)
 Y = np.array([[1, 0], [0, 1], [0, 1], [1, 0]]).reshape(4,2,1)
@@ -81,7 +88,7 @@ print(mlp.predict(np.ones((layer_sizes[0],1))))
 print()
 print("Loss:", mlp.loss(X,Y))
 
-mlp.fit(X, Y, 1, 1e-8, 3000)
+mlp.fit(X, Y, 1, 1e-8, 2000)
 
 
 for x in X:
@@ -100,3 +107,5 @@ plt.show()
 #Z2 variance: 0.12832707290078227
 #this turns out to be well documented and motivates a different activation
 #that preserves variance or we can use batch norm
+
+#also notice vanishing gradient
