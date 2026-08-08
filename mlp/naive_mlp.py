@@ -64,38 +64,41 @@ class NMLP:
         for x, y in zip(X, Y):
             J += self.cost(self.predict(x), y)
 
-        return J
+        return J/X.shape[0]
 
-    def fit(self, X, Y, alpha, epocs):
+    def fit(self, X, Y, alpha, epocs, X_test : None, Y_test: None):
         self.training_loss = []
+        self.test_loss = []
 
         for iter in range(epocs):
             for x, y in zip(X, Y):
                 self.learn(x, y, alpha * (1/X.shape[0]))
 
             self.training_loss.append(self.loss(X, Y))
-            print("#After iteration", iter, "loss is:", self.training_loss[-1])
+            # if (X_test is not None and Y_test is not None):
+            self.test_loss.append(self.loss(X_test, Y_test))
+            print("#After iteration", iter, "loss is:", self.training_loss[-1], self.test_loss[-1])
 
         return self
 
-layer_sizes = (2,10,10,2)
+# layer_sizes = (2,10,10,2)
 
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]]).reshape(4,2,1)
-Y = np.array([[1, 0], [0, 1], [0, 1], [1, 0]]).reshape(4,2,1)
+# X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]]).reshape(4,2,1)
+# Y = np.array([[1, 0], [0, 1], [0, 1], [1, 0]]).reshape(4,2,1)
 
-mlp = NMLP(layer_sizes)
-print(mlp.predict(np.ones((layer_sizes[0],1))))
-print()
-print("Loss:", mlp.loss(X,Y))
+# mlp = NMLP(layer_sizes)
+# print(mlp.predict(np.ones((layer_sizes[0],1))))
+# print()
+# print("Loss:", mlp.loss(X,Y))
 
-mlp.fit(X, Y, 1, 300000)
+# mlp.fit(X, Y, 1, 300000)
 
 
-for x in X:
-    print("input", x)
-    print("output", mlp.predict(x))
+# for x in X:
+#     print("input", x)
+#     print("output", mlp.predict(x))
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
-plt.plot(mlp.training_loss)
-plt.show()
+# plt.plot(mlp.training_loss)
+# plt.show()
